@@ -28,7 +28,7 @@
 #' @param ... Additional arguments to the DiffusionMap call
 #'
 #' @return Returns a Seurat object with a diffusion map
-#'
+#' @import destiny
 #' @importFrom utils installed.packages
 #' @importFrom stats dist quantile
 #'
@@ -78,7 +78,6 @@ RunDiffusion <- function(
   }
   data.dist <- as.matrix(dist(data.use))
   
-  require(destiny)
   dm =  DiffusionMap(data = data.dist,
                      n_eigs = max.dim, verbose = T, ...)
   data.diffusion <- data.frame(dm@eigenvectors)

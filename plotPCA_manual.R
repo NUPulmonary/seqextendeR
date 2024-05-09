@@ -1,10 +1,15 @@
-# copy of DESeq2 plotPCA, but returns the actual PCA object
-# add-ins
-# now returns percent variance for each PC requested
-# merge_metadata: joins output dataframe with colData. Defaults to FALSE for compatibility reasons.
-# return_loadings: return gene loadings data frame. Defaults to FALSE for compatibility reasons.
-# mart_name: prefix for biomart dataset name. Defaults to "mmusculus". Ignored if custom annotation is supplied or return_loadings is FALSE.
-# custom_annotation: a dataframe with "ensembl_gene_id" and "external_gene_name" as columns. Take precedence over mart name if supplied.
+#' copy of DESeq2 plotPCA, but returns the actual PCA object
+#'
+#' @param object
+#' @param intgroup
+#' @param pcs
+#' @param merge_metadata joins output dataframe with colData. Defaults to FALSE for compatibility reasons.
+#' @param return_loadings return gene loadings data frame. Defaults to FALSE for compatibility reasons.
+#' @param mart_name prefix for biomart dataset name. Defaults to "mmusculus". Ignored if custom annotation is supplied or return_loadings is FALSE.
+#' @param custom_annotation a dataframe with "ensembl_gene_id" and "external_gene_name" as columns. Take precedence over mart name if supplied.
+#' @return percent variance for each PC requested
+#' @import tidyverse
+#' @export
 plotPCA_manual = function(object, 
                           intgroup="condition", #essentially ignored if merge_metadata = TRUE
                           ntop=500, 
@@ -14,7 +19,6 @@ plotPCA_manual = function(object,
                           mart_name = "mmusculus",
                           custom_annotation = NULL)
 {
-  require(tidyverse)
   
   # calculate the variance for each gene
   rv <- rowVars(assay(object))

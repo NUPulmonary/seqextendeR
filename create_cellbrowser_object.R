@@ -4,13 +4,13 @@
 #' @param ident the ident to use for cluster identification (character name). If NA (default) uses current ident
 #' @param list_col_action whether to flatten, remove, or ignore list cols
 #' @param output_directory directory to ouput files. Created if necessary.
+#' @import Seurat
+#' @import SeuratDisk
+#' @import tidyverse
 #' @export
 
 create_cellbrowser_object = function(object, ident = NA, output_directory, list_col_action = c("flatten", "remove", "ignore"))
 {
-  library(Seurat)
-  library(SeuratDisk)
-  library(tidyverse)
   
   #reset Idents as needed
   if(!is.na(ident))

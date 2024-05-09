@@ -8,7 +8,7 @@
 #' @param fit_type fitType from DESeq2: "either "parametric", "local", or "mean" for the type of fitting of dispersions to the mean intensity. See estimateDispersions for description."
 #' @param min_replicates_for_replace minReplicatesForReplace from DESeq2, "the minimum number of replicates required in order to use replaceOutliers on a sample. If there are samples with so many replicates, the model will be refit after these replacing outliers, flagged by Cook's distance. Set to Inf in order to never replace outliers."
 #' @param base_mean_cutoff the minimum mean number of counts for a gene to be included in the final matrix/plot
-#' 
+#' @import BiocParallel
 #' @return a matrix of genes (of interest) x samples for downstream use
 #' @export
 construct_goi_matrix = function(dge,
@@ -23,7 +23,6 @@ construct_goi_matrix = function(dge,
   
  if(cores > 1)
  {
-  library(BiocParallel)
    BiocParallel::register(MulticoreParam(cores))
  }
   clusterAnnos = NULL #updated later if necessary
@@ -74,7 +73,8 @@ construct_goi_matrix = function(dge,
 #' @param fit_type fitType from DESeq2: "either "parametric", "local", or "mean" for the type of fitting of dispersions to the mean intensity. See estimateDispersions for description."
 #' @param max_k maximum value of k to consider
 #' @param min_replicates_for_replace minReplicatesForReplace from DESeq2, "the minimum number of replicates required in order to use replaceOutliers on a sample. If there are samples with so many replicates, the model will be refit after these replacing outliers, flagged by Cook's distance. Set to Inf in order to never replace outliers."
-#' 
+#' @import ggplot2
+#' @import tidyverse
 #' @return a list containing: "plot", the heatmap; "genes", gene cluster assignments; "GO", GO enrichment for each cluster (optional)
 #' @export
 k_elbow = function(dge,
@@ -87,8 +87,6 @@ k_elbow = function(dge,
                    max_k = 50,
                    min_replicates_for_replace = 7) #this is the default for DESeq2
 {
-  library(ggplot2)
-  library(tidyverse)
   options(gsubfn.engine = "R")
   
   counts_mat = construct_goi_matrix(dge = dge,
@@ -152,6 +150,12 @@ k_elbow = function(dge,
 #' @param custom_order optional vector of cluster numbers (for kmeans) to reorder clusters vertically
 #' @param tidy_go if true, join go terms into a tidy data frame
 #' @param return_fold_enrichment for GO, whether or not to include the fold-enrichment of each go term in the resultant dataß
+#' @import ComplexHeatmap
+#' @import RColorBrewer
+#' @import topGO
+#' @import GO.db
+#' @import DESeq2
+#' @import biomaRt
 #' 
 #' @return a list containing: "plot", the heatmap; "genes", gene cluster assignments (optional); "GO", GO enrichment for each cluster (optional)
 #' @export
@@ -165,6 +169,7 @@ k_means_figure = function(dge,
                           display_go_terms = T,
                           return_go_terms = F,
                           max_go_terms = 5,
+                          max_k,
                           colnames = F,
                           legend_factors = NULL,
                           go_annotations = "org.Mm.eg.db",
@@ -185,11 +190,6 @@ k_means_figure = function(dge,
                           return_fold_enrichment = FALSE,
                           ...)
 {
-  library(ComplexHeatmap)
-  library(RColorBrewer)
-  library(topGO)
-  library(GO.db)
-  library(DESeq2)
   set.seed(random_seed)
   
   counts_mat = construct_goi_matrix(dge = dge,
@@ -257,7 +257,7 @@ k_means_figure = function(dge,
     #define universe as all detected genes in dataset
     all_counts = counts(dge, normalized = T)
     universe = rownames(all_counts[rowSums(all_counts) > 0, ])
-    fisherTest = new("classicCount", testStatistic = GOFisherTest, name = "Fisher test")
+    fisher_test = new("classic_count", test_statistic = GO_fisher_test, name = "Fisher test")
     
     #determine gene ID type automatically
     #assume some transgenes will not fit the regular expression
@@ -281,7 +281,7 @@ k_means_figure = function(dge,
       cluster_genes = kmeans_results[kmeans_results$cluster == x, "gene"]
       selection = as.numeric(universe %in% cluster_genes)
       names(selection) = universe
-      go_data = new("topGOdata", 
+      go_data = new("top_GO_data", 
                     ontology = go_ontology, 
                     allGenes = selection,
                     geneSel = function(x){
@@ -291,7 +291,7 @@ k_means_figure = function(dge,
                     ID = id_type)
       
       #run Fisher test
-      test_results = topGO::getSigGroups(go_data, fisherTest)
+      test_results = topGO::getSigGroups(go_data, fisher_test)
       if(return_fold_enrichment == TRUE)
       {
         score = GenTable(go_data, 
@@ -409,7 +409,6 @@ k_means_figure = function(dge,
   {
     if(is.null(custom_annotation))
     {
-      library(biomaRt)
       mart = useMart("ensembl", ensembl_db)
       conv = getBM(attributes = c("ensembl_gene_id", "external_gene_name"),
                    mart = mart)

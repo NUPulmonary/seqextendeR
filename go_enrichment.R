@@ -11,6 +11,8 @@
 #' @param return_fold_enrichment whether or not to return enrichment data for each GO hit. Defaults to FALSE for backwards compatibility.
 #' @param expression_cutoff the miminum counts detected for a given gene to be considered expressed
 #' @return a dataframe containing the significantly enriched GO terms and enrichment scores if requested
+#' @import topGO
+#' @import tidyverse
 #' @export
 
 go_enrichment = function(deseq_object,
@@ -19,28 +21,26 @@ go_enrichment = function(deseq_object,
                          return_fold_enrichment = FALSE,
                          expression_cutoff = 1)
 {
-  library(topGO) 
-  library(tidyverse)
   
   #define universe as all detected genes in dataset
   all_counts = counts(deseq_object, normalized = T)
   universe = rownames(all_counts[rowSums(all_counts) >= expression_cutoff, ])
-  fisherTest = new("classicCount", testStatistic = GOFisherTest, name = "Fisher test")
+  fisher_test = new("classic_count", test_statistic = GO_fisher_test, name = "Fisher test")
   
   # 1 = selected, 0 = not selected in topGO
   selection = as.numeric(universe %in% goi)
   names(selection) = universe
-  go_data = new("topGOdata", 
+  go_data = new("top_GO_data", 
                 ontology = "BP", 
-                allGenes = selection,
-                geneSel = function(x){
+               all_genes = selection,
+                gene_sel = function(x){
                   return(x == 1)},
                 annot = annFUN.org, 
                 mapping = go_annotations, 
                 ID = "ensembl")
   
   #run Fisher test
-  test_results = getSigGroups(go_data, fisherTest)
+  test_results = getSigGroups(go_data, fisher_test)
   if(return_fold_enrichment == TRUE)
   {
     score = GenTable(go_data, 

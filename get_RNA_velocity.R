@@ -1,22 +1,24 @@
 # generalized function to calculate RNA velocity for a Seurat dataset
-# returns the same seurat object with an rna velocity slot added
 
-# object: seurat object
-# loomPaths: Vector of full paths to the velocyto output loom files from the python version of velocyto
-# assay: which assay to use (e.g. SCT); current defaults to DefaultAssay
-# reduction: which embeddings to use (e.g. tSNE); currently defaults to UMAP
+#' @param object seurat object
+#' @param loomPaths Vector of full paths to the velocyto output loom files from the python version of velocyto
+#' @param assay which assay to use (e.g. SCT); current defaults to DefaultAssay
+#' @param reduction which embeddings to use (e.g. tSNE); currently defaults to UMAP
+#' @param cores 
+#' @return the same seurat object with an rna velocity slot added
+#' @import Seurat
+#' @import velocyto.R
+#' @import future
+#' @import doParallel
+#' @import dplyr
+#' @import tibble
+#' @export
 
-getRNAVelocity = function(object, loomPaths, reduction = "umap", cores = 1)
+getRNAVelocity = function(object, loomPaths, reduction = "umap", cores = 1, assay = DefaultAssay(object))
 {
   #dependencies
-  require(Seurat)
-  require(velocyto.R)
-  require(future)
-  require(doParallel)
   registerDoParallel(cores)
   Sys.setenv(MC_CORES=cores)
-  require(dplyr)
-  require(tibble)
    
   #load into velocyto
   looms = mclapply(loomPaths, read.loom.matrices) 

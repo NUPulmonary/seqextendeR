@@ -6,6 +6,7 @@
 #' @param cores number of cores to use for parallel processing of simulations (defaults to 1)
 #' @param random_seed self-explanatory
 #' @import tidyverse
+#' @import parallel
 #' @return a list with "summary" containing summary stats of all simulations and "simulations" containing all individual simulation data
 #' @export
 determine_min_reads = function(n_cells, 
@@ -14,8 +15,6 @@ determine_min_reads = function(n_cells,
                                          novaseq_SP = 800e6, novaseq_S1 = 1.6e9, novaseq_S2 = 4.1e9, novaseq_S4 = 10e9),
                                simulations = 1000, cores = 1, random_seed = 12345)
 {
-  library(tidyverse)
-  library(parallel)
   
   #iterate through each specified cartridge and randomly assign reads to cells (labeled 1-N)
   results = lapply(reads, function(kit_reads){

@@ -26,6 +26,13 @@
 #' @param y_max maximum value of y for resultant plots
 #' @param label_only_sig if true, label only significant genes from 'genes' argument (passed to pretty_MA_plot)
 #' @return a list of lists. "MA" is a list of ggplot2-editable MA plots. "hits" is a list of results objects.
+#' @import DESeq2
+#' @import parallel
+#' @import doParallel
+#' @import BiocParallel
+#' @import Cairo
+#' @import tidyverse
+#' @import biomaRt
 #' @export
 
 get_pairwise_DESeq = function(des, comparison_col = NA, fit_type = "parametric", 
@@ -38,13 +45,6 @@ get_pairwise_DESeq = function(des, comparison_col = NA, fit_type = "parametric",
                               random_seed = 12345, pdf_width = 6, pdf_height = 4,
                               y_min = NA, y_max = NA, label_only_sig = FALSE)
 {
-  library(DESeq2)
-  library(parallel)
-  library(doParallel)
-  library(BiocParallel)
-  library(Cairo)
-  library(tidyverse)
-  library(biomaRt)
   register(MulticoreParam(cores))
   
   source("~/utils/R/pretty_MA_plot.R")

@@ -1,8 +1,30 @@
-# Function to separate single-cell data by a factor of interest and create 
-# pseudo-bulk datasets by combining matrices for each factor
-# followed by DEA with DESeq2   
-
-# currently supports only single-factor designs
+#' Function to separate single-cell data by a factor of interest and create 
+#'  pseudo-bulk datasets by combining matrices for each factor
+#' followed by DEA with DESeq2   
+#'
+#' currently supports only single-factor designs
+#' @param object
+#' @param design
+#' @param splitCells
+#' @param skip
+#' @param cellFactor
+#' @param organism
+#' @param geneVar
+#' @param outDir
+#' @param outPrefix
+#' @param sortDirection
+#' @param minCells
+#' @param cores
+#' @param fit_type
+#' @param genomePrefix
+#' @param cell_mappings
+#' @return 
+#' @import Seurat
+#' @import DESeq2
+#' @import biomaRt
+#' @import future
+#' @import BiocParallel
+#' @export 
   
 bulkDEA = function(object, #seurat object
                    metaData, #metadata mapping samples to factors. Rownames are sample names.
@@ -19,13 +41,8 @@ bulkDEA = function(object, #seurat object
                    cores = 1, #cores to run in parallel
                    fit_type = "parametric", #to control dispersion fitting
                    genomePrefix = NA, # regular expression of genome prefixe(s) on gene names for removal and better binding downstream
-                   cellMappings = NULL) #optional data frame to redefine samples from individual cell IDs rather than just prefix. Rownames are cell IDs.
+                   cell_mappings = NULL) #optional data frame to redefine samples from individual cell IDs rather than just prefix. Rownames are cell IDs.
 {
-   require(Seurat)
-   require(DESeq2)
-   require(biomaRt)
-   require(future)
-   library(BiocParallel)
    register(BPPARAM = MulticoreParam(cores))
    dateString = format(Sys.Date(), "%y%m%d")
    if(!dir.exists(outDir))
@@ -44,12 +61,12 @@ bulkDEA = function(object, #seurat object
    completeMetadata = metaData
    
    #handle sample IDs
-   if(is.null(cellMappings))
+   if(is.null(cell_mappings))
    {
      allSamples = sort(unique(substr(rownames(object@meta.data), 1, (regexpr("\\_+[ATCG]", rownames(object@meta.data)) - 1))))
    } else
    {
-     allSamples = unique(cellMappings[, 1])
+     allSamples = unique(cell_mappings[, 1])
    }
    sampleData = matrix(nrow = 0, ncol = (length(allSamples) + 1)) # keeps track of number of cells per condition
    sampleDataCols = c("cellType", paste0("Ncells_", allSamples))
@@ -69,21 +86,21 @@ bulkDEA = function(object, #seurat object
       message(cell)
       metaData = completeMetadata #reset for each round
       
-      cellSub = object
-      if(cell != "AllCells" && splitCells) #for all cells, keep whole dataset
-         cellSub = cellSub[ , cellSub@meta.data[ , cellFactor] == cell]
+      cell_sub = object
+      if(cell != "all_cells" && splitCells) #for all cells, keep whole dataset
+         cell_sub = cell_sub[ , cell_sub@meta.data[ , cellFactor] == cell]
       
       #now get joined counts matrices
-      counts = round(as.matrix(cellSub@assays$RNA@counts)) # raw counts
+      counts = round(as.matrix(cell_sub@assays$RNA@counts)) # raw counts
       sd = cell
       for(sample in allSamples) #get number of cells for each (zero therefore means not present)
       {
-        if(is.null(cellMappings))
+        if(is.null(cell_mappings))
         {
-          sd = c(sd, sum(grepl(sample, colnames(cellSub))))
+          sd = c(sd, sum(grepl(sample, colnames(cell_sub))))
         } else
         {
-          sd = c(sd, sum(cellSub@meta.data[, colnames(cellMappings)[1]] == sample))
+          sd = c(sd, sum(cell_sub@meta.data[, colnames(cell_mappings)[1]] == sample))
         }
       }
       samples = allSamples[as.numeric(sd[2:length(sd)]) >= minCells] # need at least 50 cells to get a real picture
@@ -105,7 +122,7 @@ bulkDEA = function(object, #seurat object
       keep = bulkN[bulkN$N >= 2, ]$sample
       if(length(keep) > 1)
       {
-         cellSub = cellSub[ , cellSub@meta.data[ , compFactor] %in% keep]
+         cell_sub = cell_sub[ , cell_sub@meta.data[ , compFactor] %in% keep]
       } else
       {
          warning("Skipped -- not enough samples")
@@ -123,12 +140,12 @@ bulkDEA = function(object, #seurat object
       colnames(joinedMat) = samples
       for(sample in samples)
       {
-        if(is.null(cellMappings))
+        if(is.null(cell_mappings))
         {
           sampleMat = counts[ , grepl(sample, colnames(counts))]
         } else
         {
-          sampleCells = colnames(cellSub)[cellSub@meta.data[, colnames(cellMappings)[1]] == sample]
+          sampleCells = colnames(cell_sub)[cell_sub@meta.data[, colnames(cell_mappings)[1]] == sample]
           sampleMat = counts[, sampleCells]
         }
          sampleCounts = rowSums(sampleMat)

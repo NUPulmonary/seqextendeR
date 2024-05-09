@@ -17,6 +17,12 @@
 #' @param y_max maximum value of y for resultant plot
 #' @param label_only_sig if true, label only significant genes from 'genes' argument
 #' @return an MA plot generated in ggplot2
+#' @import ggplot2
+#' @import ggrepel
+#' @import biomaRt
+#' @import dplyr
+#' @import tibble
+#' @import tidyverse
 #' @export
 
 pretty_MA_plot = function(results, 
@@ -36,12 +42,6 @@ pretty_MA_plot = function(results,
                           label_only_sig = FALSE,
                           random_seed = 12345)
 {
-  require(ggplot2)
-  require(ggrepel)
-  require(biomaRt)
-  require(dplyr)
-  require(tibble)
-  require(tidyverse)
   
   if(convert_ids) #from ensembl to common symbols
   {

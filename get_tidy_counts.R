@@ -1,12 +1,15 @@
 # script to extract counts for specified genes from a DESeq object, with metadata
 
-# Parameters:
-# obj: DESeq2 object
-# goi: vector of genes of interest in ensembl or gene name format; if NULL (default) returns all genes
-# goi_format: "ensembl_gene_id" (default) or "external_gene_name" (symbols)
-# species: species in ensembl format e.g. mmusculus (default); ignored if custom annotation is supplied
-# custom_annotation: custom conversion between ensembl and external gene name
-# df_shape: shape of output data frame. "long": unique row for each gene * sample combination. "wide": each gene (symbol) gets a column
+#' @param obj DESeq2 object
+#' @param goi vector of genes of interest in ensemble or gene name format; if NULL (default) returns all genes
+#' @param goi_format "ensembl_gene_id" (default) or "external_gene_name" (symbols)
+#' @param species species in ensemble format e.g. musculus (default); ignored if custom annotation is supplied
+#' @param custom_annotation custom conversion between ensemble and external gene name
+#' @param df_shape shape of output data frame. "long": unique row for each gene * sample combination. "wide": each gene (symbol) gets a column
+#' @return
+#' @import tidyverse
+#' @import biomaRt
+#' @export
 
 get_tidy_counts = function(obj,
                            goi = NULL,

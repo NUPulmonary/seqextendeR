@@ -3,10 +3,10 @@
 #' Rogan Grant 20212-08-25
 #' 
 #' @param deseq_object a DESeq2 object with library normalization pre-calculated using DESeq(), vst(), etc
-#' @param goi vector genes of interest in ensembl gene ID format. For fisher test: just IDs. For KS test: vector of scores with IDs as names.
+#' @param goi vector genes of interest in ensemble gene ID format. For fisher test: just IDs. For KS test: vector of scores with IDs as names.
 #' @param kegg_organism abbreviated organism for kegg database (defaults to mouse "mmu")
 #' @param gene_conversion conversion from ensembl_gene_id to external_gene_name (generally from biomart)
-#' @param expression_cutoff the miminum counts detected for a given gene to be considered expressed
+#' @param expression_cutoff the minimum counts detected for a given gene to be considered expressed
 #' @param cores number of cores to use (defaults to 1)
 #' @return a dataframe containing the significantly enriched GO terms and enrichment scores if requested
 #' @export
