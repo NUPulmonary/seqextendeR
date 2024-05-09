@@ -9,7 +9,7 @@
 #' @param min_replicates_for_replace minReplicatesForReplace from DESeq2, "the minimum number of replicates required in order to use replaceOutliers on a sample. If there are samples with so many replicates, the model will be refit after these replacing outliers, flagged by Cook's distance. Set to Inf in order to never replace outliers."
 #' @param base_mean_cutoff the minimum mean number of counts for a gene to be included in the final matrix/plot
 #' 
-#' @return a list containing: "plot", the heatmap; "genes", gene cluster assignments; "GO", GO enrichment for each cluster (optional)
+#' @return a matrix of genes (of interest) x samples for downstream use
 #' @export
 construct_goi_matrix = function(dge,
                                 qval_cutoff = 0.05,
